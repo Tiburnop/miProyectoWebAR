@@ -1,52 +1,43 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // Solicitar permisos de cámara
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(() => {
-                console.log('Permiso de cámara concedido');
-                initARScene();
-            })
-            .catch(err => {
-                console.error('Error al acceder a la cámara:', err);
-                alert('Se necesita acceso a la cámara para esta experiencia.');
-            });
-    } else {
-        alert('Tu navegador no soporta acceso a la cámara.');
-    }
-});
+// 1. Solicitar permisos automáticamente al cargar
+window.onload = function() {
+    // Pedir permisos de cámara
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function() {
+            initARExperience();
+        })
+        .catch(function(err) {
+            console.error("Error de cámara:", err);
+        });
+};
 
-function initARScene() {
+function initARExperience() {
     const scene = document.querySelector('a-scene');
     
-    scene.addEventListener('loaded', () => {
-        // Crear el modelo de caballo
+    scene.addEventListener('loaded', function() {
+        // Crear entidad del caballo
         const horse = document.createElement('a-entity');
         
-        // En lugar del modelo GLB
-        horse.setAttribute('geometry', 'primitive: box');
-        horse.setAttribute('material', 'color: red');
-        horse.setAttribute('scale', '0.5 0.5 0.5');    
-        // Añadir rotación continua
-        horse.setAttribute('animation', {
-            property: 'rotation',
-            to: '0 360 0',
-            loop: true,
-            dur: 10000,
-            easing: 'linear'
-        });
+        // Configurar modelo 3D
+        horse.setAttribute('gltf-model', 'modelos/Horse.glb');
+        horse.setAttribute('scale', '0.25 0.25 0.25');
+        
+        // Posicionar a 1.5 metros de distancia en un ángulo aleatorio
+        const distance = 1.5;
+        const angle = Math.random() * Math.PI * 2;
+        const x = Math.sin(angle) * distance;
+        const z = -Math.cos(angle) * distance;
+        
+        horse.setAttribute('position', `${x} -1.5 ${z}`); // Y=-1.5 para ponerlo en el suelo
+        
+        // Hacer que mire siempre hacia la cámara
+        horse.setAttribute('look-at', '[camera]');
+        
+        // Añadir animación interna (sin rotar sobre sí mismo)
+        horse.setAttribute('animation-mixer', 'clip: Walk; loop: repeat');
         
         // Añadir a la escena
-        document.getElementById('horse-anchor').appendChild(horse);
+        document.getElementById('caballo').appendChild(horse);
         
-        console.log('Modelo de caballo añadido a la escena');
-    });
-    
-    // Manejar eventos de AR.js
-    scene.addEventListener('markerFound', (e) => {
-        console.log('Marcador encontrado');
-    });
-    
-    scene.addEventListener('markerLost', (e) => {
-        console.log('Marcador perdido');
+        console.log('Caballo colocado a', distance, 'metros de distancia');
     });
 }
