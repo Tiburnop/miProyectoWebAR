@@ -1,20 +1,38 @@
-// Este script se asegurará de que el caballo aparezca cuando la superficie se detecte
+document.addEventListener('DOMContentLoaded', () => {
+    const permissionOverlay = document.getElementById('permission-overlay');
+    const permissionBtn = document.getElementById('permission-btn');
+    const arScene = document.querySelector('a-scene');
 
-// Cuando la escena se haya cargado
-window.onload = () => {
-    document.querySelector("a-scene").addEventListener("loaded", () => {
-        // Crear el modelo de caballo y agregarlo a la escena
-        const entity = document.createElement("a-entity");
+    permissionBtn.addEventListener('click', async () => {
+        try {
+            // Solicitar permisos de cámara
+            const cameraPermission = await navigator.mediaDevices.getUserMedia({ video: true });
+            
+            // Solicitar permisos de ubicación
+            const position = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject);
+            });
 
-        // No usamos GPS para interiores, solo añadimos el modelo a la escena
-        entity.setAttribute("gltf-model", "modelos/Horse.glb");  // Ruta del modelo .glb
-        entity.setAttribute("scale", "0.2 0.2 0.2");  // Escala ajustada para que se vea correctamente
-        entity.setAttribute("animation-mixer", "");  // Para animar el modelo si es necesario
+            // Ocultar pantalla de permisos
+            permissionOverlay.style.display = 'none';
+            
+            // Mostrar escena AR
+            arScene.style.display = 'block';
 
-        // Asegura que el modelo esté en una superficie visible
-        entity.setAttribute("position", "0 0 0");  // Posición del modelo en relación con la cámara
+            // Inicializar carga del modelo
+            window.onload = () => {
+                arScene.addEventListener("loaded", () => {
+                    const entity = document.createElement("a-entity");
+                    entity.setAttribute("gltf-model", "modelos/Horse.glb");
+                    entity.setAttribute("scale", "0.2 0.2 0.2");
+                    entity.setAttribute("animation-mixer", "");
+                    entity.setAttribute("position", "0 0 0");
+                    arScene.appendChild(entity);
+                });
+            };
 
-        // Añadir el modelo a la escena
-        document.querySelector("a-scene").appendChild(entity);
+        } catch (error) {
+            alert('Error al obtener permisos: ' + error.message);
+        }
     });
-};
+});
