@@ -1,28 +1,106 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>WebAR con AR.js</title>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebAR Experiencia de Caballo</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/jeromeetienne/AR.js/aframe/build/aframe-ar.js"></script>
-  </head>
-  <body style="margin: 0; overflow: hidden">
-    <!-- Escena AR -->
-    <a-scene 
-      embedded 
-      arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;" 
-      vr-mode-ui="enabled: false">
-      
-      <!-- Cámara para AR -->
-      <a-camera gps-camera rotation-reader></a-camera>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        #permission-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 1000;
+            text-align: center;
+            padding: 20px;
+        }
+        #permission-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Pantalla de permisos -->
+    <div id="permission-overlay">
+        <h2>Permisos Necesarios</h2>
+        <p>Esta aplicación necesita acceso a tu cámara y ubicación para funcionar correctamente.</p>
+        <button id="permission-btn">Conceder Permisos</button>
+    </div>
 
-      <!-- Superficie detectada donde se colocará el modelo 3D -->
-      <a-entity 
-        id="marker"
-        gltf-model="modelos/Horse.glb"
-        scale="0.2 0.2 0.2" 
-        position="0 0 0"
-        animation-mixer>
-      </a-entity>
+    <!-- Escena AR (inicialmente oculta) -->
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;" 
+        vr-mode-ui="enabled: false"
+        style="display: none;">
+      
+        <!-- Cámara para AR con soporte GPS -->
+        <a-camera gps-camera rotation-reader></a-camera>
+
+        <!-- Modelo 3D de caballo -->
+        <a-entity 
+            id="horse-model"
+            gltf-model="modelos/Horse.glb"
+            scale="0.2 0.2 0.2" 
+            position="0 0 0"
+            animation-mixer>
+        </a-entity>
     </a-scene>
-  </body>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const permissionOverlay = document.getElementById('permission-overlay');
+            const permissionBtn = document.getElementById('permission-btn');
+            const arScene = document.querySelector('a-scene');
+
+            permissionBtn.addEventListener('click', async () => {
+                try {
+                    // Solicitar permisos de cámara
+                    const cameraPermission = await navigator.mediaDevices.getUserMedia({ video: true });
+                    
+                    // Solicitar permisos de ubicación
+                    const position = await new Promise((resolve, reject) => {
+                        navigator.geolocation.getCurrentPosition(resolve, reject);
+                    });
+
+                    // Ocultar pantalla de permisos
+                    permissionOverlay.style.display = 'none';
+                    
+                    // Mostrar escena AR
+                    arScene.style.display = 'block';
+
+                    // Inicializar carga del modelo
+                    window.onload = () => {
+                        arScene.addEventListener("loaded", () => {
+                            const entity = document.createElement("a-entity");
+                            entity.setAttribute("gltf-model", "modelos/Horse.glb");
+                            entity.setAttribute("scale", "0.2 0.2 0.2");
+                            entity.setAttribute("animation-mixer", "");
+                            entity.setAttribute("position", "0 0 0");
+                            arScene.appendChild(entity);
+                        });
+                    };
+
+                } catch (error) {
+                    alert('Error al obtener permisos: ' + error.message);
+                }
+            });
+        });
+    </script>
+</body>
 </html>
