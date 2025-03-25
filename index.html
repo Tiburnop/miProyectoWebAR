@@ -9,14 +9,15 @@
     <!-- Escena AR -->
     <a-scene 
       embedded 
-      arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3; gpsMinDistance: 5; gpsTimeInterval: 3000;" 
+      arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;" 
       vr-mode-ui="enabled: false">
-
+      
       <!-- Cámara para AR -->
       <a-camera gps-camera rotation-reader></a-camera>
 
       <!-- Superficie detectada donde se colocará el modelo 3D -->
-      <a-entity id="marker"
+      <a-entity 
+        id="marker"
         gltf-model="modelos/Horse.glb"
         scale="0.2 0.2 0.2" 
         position="0 0 0"
